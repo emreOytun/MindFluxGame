@@ -74,15 +74,15 @@ void AFloorTile::OnTriggerBoxOverlap(UPrimitiveComponent* OverlappedComponent, A
 void AFloorTile::SpawnItems()
 {
 	if (IsValid(SmallObstacleClass) && IsValid(BigObstacleClass)) {
-		SpawnLaneItem(CenterLane);
-		SpawnLaneItem(RightLane);
-		SpawnLaneItem(LeftLane);
+		int res1 = SpawnLaneItem(CenterLane, 0);
+		int res2 = SpawnLaneItem(RightLane, res1);
+		SpawnLaneItem(LeftLane, res1 + res2);
 	}
 	
 }
 
-void AFloorTile::
-SpawnLaneItem(UArrowComponent* Lane)
+int AFloorTile::
+SpawnLaneItem(UArrowComponent* Lane, int totalBigObstacle)
 {
 	const float RandVal = FMath::FRandRange(0.f, 1.f);
 	FActorSpawnParameters SpawnParameters;
@@ -90,7 +90,8 @@ SpawnLaneItem(UArrowComponent* Lane)
 
 	const FTransform& SpawnLocation = Lane->GetComponentTransform();
 
-	if (UKismetMathLibrary::InRange_FloatFloat(RandVal,0.5f,0.75f,true,true))
+	int res = 0;
+	if (totalBigObstacle == 2 || UKismetMathLibrary::InRange_FloatFloat(RandVal,0.5f,0.75f,true,true))
 	{
 		
 		AObstacle* Obstacle = GetWorld()->SpawnActor<AObstacle>(SmallObstacleClass, SpawnLocation, SpawnParameters);
@@ -99,7 +100,9 @@ SpawnLaneItem(UArrowComponent* Lane)
 	{
 
 		AObstacle* Obstacle = GetWorld()->SpawnActor<AObstacle>(BigObstacleClass, SpawnLocation, SpawnParameters);
+		res = 1;
 	}
+	return res;
 }
 
 
