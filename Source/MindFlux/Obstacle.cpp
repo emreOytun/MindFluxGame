@@ -22,7 +22,7 @@ void AObstacle::OnObstacleHit(UPrimitiveComponent* HitComponent, AActor* OtherAc
 {
 	ARunCharacter* RunCharacter = Cast<ARunCharacter>(OtherActor);
 
-	if (RunCharacter) {
+	if (GetWorld()->IsServer() && RunCharacter) {
 		RunCharacter->Death();
 	}
 }

@@ -19,6 +19,8 @@ class MINDFLUX_API AFloorTile : public AActor
 	GENERATED_BODY()
 	
 public:	
+	int TileNum;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Config")
 	TSubclassOf<AObstacle> SmallObstacleClass;
 
@@ -60,12 +62,6 @@ public:
 	}
 
 protected:
-	/*
-	UFUNCTION(Server, Reliable, WithValidation)
-	void Server_OnTrigger();
-	bool Server_OnTrigger_Validate();
-	void Server_OnTrigger_Implementation();
-	*/
 
 	UPROPERTY(VisibleInstanceOnly)
 	class AMindFluxGameModeBase* RunGameMode;

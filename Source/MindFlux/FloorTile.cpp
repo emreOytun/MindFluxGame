@@ -41,7 +41,7 @@ AFloorTile::AFloorTile()
 // Called when the game starts or when spawned
 void AFloorTile::BeginPlay()
 {
-	UE_LOG(LogTemp, Warning, TEXT("BEGINPLAY TILE %d"), GetWorld()->IsServer());
+	//UE_LOG(LogTemp, Warning, TEXT("BEGINPLAY TILE %d"), GetWorld()->IsServer());
 	Super::BeginPlay();
 	
 	RunGameMode = Cast<AMindFluxGameModeBase>(UGameplayStatics::GetGameMode(GetWorld()));
@@ -60,15 +60,15 @@ void AFloorTile::BeginPlay()
 void AFloorTile::OnTriggerBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) 
 {
 	++count;
-	ARunCharacter* RunCharacter = Cast<ARunCharacter>(OtherActor);
-	UE_LOG(LogTemp, Warning, TEXT("OnTriggerBoxOverlap %d Count %d CharcId: %s"), GetWorld()->IsServer(), count, *RunCharacter->GetName());
-	if (RunCharacter) {
+	//ARunCharacter* RunCharacter = Cast<ARunCharacter>(OtherActor);
+	//UE_LOG(LogTemp, Warning, TEXT("OnTriggerBoxOverlap %d Count %d CharcId: %s"), GetWorld()->IsServer(), count, *RunCharacter->GetName());
+	//if (RunCharacter) {
 		//if (GetWorld()->IsServer() && count == 2) {
 		if (GetWorld()->IsServer()) {
 			RunGameMode->AddFloorTile(true);
-			GetWorldTimerManager().SetTimer(DestroyHandle, this, &AFloorTile::DestroyFloorTile, 5.f, false);
+			GetWorldTimerManager().SetTimer(DestroyHandle, this, &AFloorTile::DestroyFloorTile, 3.f, false);
 		}
-	}
+	//}
 }
 
 void AFloorTile::SpawnItems()
@@ -135,8 +135,10 @@ void AFloorTile::Server_OnTrigger_Implementation()
 
 void AFloorTile::DestroyFloorTile()
 {
-	UE_LOG(LogTemp, Warning, TEXT("DestroyFloorTile %d"), GetWorld()->IsServer());
-	this->Destroy();
+	//UE_LOG(LogTemp, Warning, TEXT("DestroyFloorTile %d"), GetWorld()->IsServer());
+	if (TileNum > 5) {
+		this->Destroy();
+	}
 	if (DestroyHandle.IsValid()) {
 		GetWorldTimerManager().ClearTimer(DestroyHandle);
 	}

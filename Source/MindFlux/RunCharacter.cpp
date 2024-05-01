@@ -27,39 +27,54 @@ ARunCharacter::ARunCharacter()
 // Called when the game starts or when spawned
 void ARunCharacter::BeginPlay()
 {
-	UE_LOG(LogTemp, Warning, TEXT("BEGINPLAY CHARAC %d"), GetWorld()->IsServer());
+	//UE_LOG(LogTemp, Warning, TEXT("BEGINPLAY CHARAC %d"), GetWorld()->IsServer());
 	Super::BeginPlay();
 	RunGameMode = Cast<AMindFluxGameModeBase>(UGameplayStatics::GetGameMode(GetWorld()));
+	bReplicates = true;
+	CountCharacters = true;
 }
 
-void ARunCharacter::OnDeath()
+void ARunCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
-	bIsDead = false;
-	if (RestartTimerHandle.IsValid()) {
-		GetWorldTimerManager().ClearTimer(RestartTimerHandle);
-	}
+	// Call the Super
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	if(GetWorld()->IsServer()){
-
-		// Reload the current level to restart the game
-		UGameplayStatics::OpenLevel(this, FName(*GetWorld()->GetName()), true);
-	}
-
+	// Add properties to replicated for the derived class
+	DOREPLIFETIME(ARunCharacter, TotalCharacters);
 }
 
 // Called every frame
 void ARunCharacter::Tick(float DeltaTime)
 {
+	//if (GetWorld()->IsServer())
+		//UE_LOG(LogTemp, Warning, TEXT("TOTAL CHARACTERS %d IS_SERVER: %d, %d, %d"), TotalCharacters, GetWorld()->IsServer(), CountCharacters, RunGameMode->SetCountAsGameStateToStart);
+	if (GetWorld()->IsServer() && CountCharacters) {
+		if (RunGameMode->SetCountAsGameStateToStart) {
+			TotalCharacters = RunGameMode->CountPlayers();
+
+			if (TotalCharacters >= 1) {
+				CountCharacters = false;
+			}
+			//UE_LOG(LogTemp, Warning, TEXT("TOTAL CHARACTERS %d IS_SERVER: %d"), TotalCharacters, GetWorld()->IsServer());
+		}
+		//UE_LOG(LogTemp, Warning, TEXT("TOTAL CHARACTERS %d"), TotalCharacters);
+	}
+	
+
 	//if (GetWorld()->IsServer()) {
-		UE_LOG(LogTemp, Warning, TEXT("TICK CHARAC %d"), GetWorld()->IsServer());
+		//UE_LOG(LogTemp, Warning, TEXT("TICK CHARAC %d"), GetWorld()->IsServer());
 		Super::Tick(DeltaTime);
 
-		FRotator ControlRot = GetControlRotation();
-		ControlRot.Roll = 0.f;
-		ControlRot.Pitch = 0.f;
+		if (TotalCharacters >= 1) {
+			FRotator ControlRot = GetControlRotation();
+			ControlRot.Roll = 0.f;
+			ControlRot.Pitch = 0.f;
 
-		// ControlRot.Vector() == For getting forward vector
-		AddMovementInput(ControlRot.Vector());
+			//UE_LOG(LogTemp, Warning, TEXT("TOTAL CHARACTERS %d IS_SERVER: %d"), TotalCharacters, GetWorld()->IsServer());
+		
+			// ControlRot.Vector() == For getting forward vector
+			AddMovementInput(ControlRot.Vector());
+		}
 	//}
 }
 
@@ -79,19 +94,19 @@ void ARunCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 void ARunCharacter::MoveLeft() 
 {
-	UE_LOG(LogTemp, Warning, TEXT("MOVELEFT %d"), GetWorld()->IsServer());
+	//UE_LOG(LogTemp, Warning, TEXT("MOVELEFT %d"), GetWorld()->IsServer());
 	Server_OnTrigger(0);
 }
 
 void ARunCharacter::MoveRight() 
 {
-	UE_LOG(LogTemp, Warning, TEXT("MOVERIGHT %d"), GetWorld()->IsServer());
+	//UE_LOG(LogTemp, Warning, TEXT("MOVERIGHT %d"), GetWorld()->IsServer());
 	Server_OnTrigger(1);
 }
 
 void ARunCharacter::MoveDown() 
 {
-	UE_LOG(LogTemp, Warning, TEXT("MOVE DOWN WAS PRESSED"));
+	//UE_LOG(LogTemp, Warning, TEXT("MOVE DOWN WAS PRESSED"));
 }
 
 // float Value: Comes from timeline. It gives where it is in the timeline
@@ -106,6 +121,105 @@ void ARunCharacter::ChangeLaneFinished() {
 	CurrentLane = NextLane;
 }
 
+void ARunCharacter::OnDeath()
+{
+	bIsDead = false;
+	TotalCharacters = 0; // Client sets it to 0 immediately also
+
+	/*
+	if (RestartTimerHandle.IsValid()) {
+		GetWorldTimerManager().ClearTimer(RestartTimerHandle);
+	}
+	*/
+
+	
+	if (GetWorld()->IsServer()) {
+		Client_OnTrigger();
+
+		//RunGameMode->DestroyTiles();
+
+		//RunGameMode->AddFloorTileAfterRespawn(false);
+		//RunGameMode->TotalTileNum = RunGameMode->NumInitialFloorTiles;
+
+		//RunGameMode->NextSpawnPoint = RunGameMode->InitialSpawnPoint;
+	//	RunGameMode->AddFloorTileAfterRespawn(false);
+	//	RunGameMode->AddFloorTile(false);
+	//	RunGameMode->CreateInitialFloorTiles();
+
+		//UE_LOG(LogTemp, Warning, TEXT("IS_SERVER %d, LEVEL: %s"), GetWorld()->IsServer(), *GetWorld()->GetName());
+		// Reload the current level to restart the game
+		//RunGameMode->RestartGame();
+		//GetWorld()->ServerTravel(*GetWorld()->GetName());
+		//UGameplayStatics::OpenLevel(this, FName(*GetWorld()->GetName()), true);
+	
+		//TotalCharacters = 0;
+		RunGameMode->SetCountAsGameStateToStart = false;
+		int32 PlayerControllerNum = 0;
+
+		// Iterate through player controllers
+		for (FConstPlayerControllerIterator Iterator = GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator)
+		{
+			APlayerController* PlayerController = Iterator->Get();
+			if (PlayerController)
+			{
+				
+				// Get the controlled pawn (character)
+				APawn* ControlledPawn = PlayerController->GetPawn();
+
+			//	if (ControlledPawn)
+				//{
+					PlayerControllerNum++;
+
+					// Get the initial spawn location of the character
+					//FVector InitialLocation = ControlledPawn->GetActorLocation();
+					FVector InitialLocation(50.0f + PlayerControllerNum / 100, 0.0f, 112.000687f);
+
+					// Destroy the current pawn
+					if (ControlledPawn) ControlledPawn->Destroy();
+
+					// Check if the CharacterClass is valid
+					if (RunGameMode->CharacterClass != nullptr)
+					{
+						// Spawn the character using the CharacterClass
+						ARunCharacter* NewCharacter = GetWorld()->SpawnActor<ARunCharacter>(RunGameMode->CharacterClass, InitialLocation, FRotator::ZeroRotator);
+						NewCharacter->TotalCharacters = 0;
+						
+						if (NewCharacter)
+						{
+							// Possess the new character with the player controller
+							PlayerController->Possess(NewCharacter);
+
+							/*
+							// Enable replication for the new character
+							NewCharacter->SetReplicates(true);
+							NewCharacter->SetReplicateMovement(true);
+
+							
+
+							// Synchronize initial state to the client
+							// ...
+							*/
+						}
+						else
+						{
+							UE_LOG(LogTemp, Warning, TEXT("Failed to spawn character using CharacterClass"));
+						}
+						
+					}
+					else
+					{
+						UE_LOG(LogTemp, Warning, TEXT("CharacterClass is not set"));
+					}
+				}
+			//}
+		}
+		//UE_LOG(LogTemp, Warning, TEXT("After dead count: %d"), PlayerControllerNum);
+
+		GetWorldTimerManager().SetTimer(RunGameMode->RespawnTimerHandle, RunGameMode, &AMindFluxGameModeBase::StartCharactersTicking, 3.f, false);
+		//RunGameMode->SetCountAsGameStateToStart = true;
+	}
+}
+
 void ARunCharacter::Death()
 {
 	if (!bIsDead) {
@@ -115,7 +229,7 @@ void ARunCharacter::Death()
 		UWorld* World = GetWorld();
 
 		if (World) {
-			bIsDead = true;
+			//bIsDead = true;
 			DisableInput(nullptr);
 
 			if (DeathParticleSystem) {
@@ -127,7 +241,8 @@ void ARunCharacter::Death()
 			}
 
 			GetMesh()->SetVisibility(false);
-			World->GetTimerManager().SetTimer(RestartTimerHandle, this, &ARunCharacter::OnDeath, 1.f);
+			OnDeath();
+			//World->GetTimerManager().SetTimer(RestartTimerHandle, this, &ARunCharacter::OnDeath, 1.f);
 		}
 	}
 
@@ -140,7 +255,7 @@ bool ARunCharacter::Server_OnTrigger_Validate(bool isRight)
 
 void ARunCharacter::Server_OnTrigger_Implementation(bool isRight)
 {
-	UE_LOG(LogTemp, Warning, TEXT("SERVER %d"), GetWorld()->IsServer());
+	//UE_LOG(LogTemp, Warning, TEXT("SERVER %d"), GetWorld()->IsServer());
 	if (isRight) {
 		NextLane = FMath::Clamp(CurrentLane + 1, 0, 2);
 		ChangeLane();
@@ -148,5 +263,29 @@ void ARunCharacter::Server_OnTrigger_Implementation(bool isRight)
 	else {
 		NextLane = FMath::Clamp(CurrentLane - 1, 0, 2);
 		ChangeLane();
+	}
+}
+
+bool ARunCharacter::Client_OnTrigger_Validate()
+{
+	return true;
+}
+
+void ARunCharacter::Client_OnTrigger_Implementation()
+{
+	UWorld* World = GetWorld();
+	if (World) {
+		const FVector Location = GetActorLocation();
+
+		//bIsDead = true;
+		DisableInput(nullptr);
+
+		if (DeathParticleSystem) {
+			UGameplayStatics::SpawnEmitterAtLocation(World, DeathParticleSystem, Location);
+		}
+
+		if (DeathSound) {
+			UGameplayStatics::PlaySoundAtLocation(World, DeathSound, Location);
+		}
 	}
 }

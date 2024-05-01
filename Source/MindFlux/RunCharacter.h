@@ -24,6 +24,22 @@ private:
 	class AMindFluxGameModeBase* RunGameMode;
 
 public:
+
+	UPROPERTY(EditAnywhere, Category = "Config")
+	bool CountCharacters;
+
+	// Count the total number of characters
+	UPROPERTY(Replicated)
+	int32 TotalCharacters;
+
+	// Override Replicate Properties function
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	
+	UFUNCTION(Client, Reliable)
+	void Client_OnTrigger();
+	bool Client_OnTrigger_Validate();
+	void Client_OnTrigger_Implementation();
+
 	UFUNCTION(Server, Reliable, WithValidation)
 	void Server_OnTrigger(bool isRight);
 	bool Server_OnTrigger_Validate(bool isRight);
