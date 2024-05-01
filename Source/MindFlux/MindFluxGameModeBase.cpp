@@ -25,7 +25,7 @@ void AMindFluxGameModeBase::BeginPlay()
 
 void AMindFluxGameModeBase::CreateInitialFloorTiles() 
 {
-	AFloorTile* Tile = AddFloorTile();
+	AFloorTile* Tile = AddFloorTile(false);
 	if (Tile) {
 		LaneSwitchValues.Add(Tile->LeftLane->GetComponentLocation().Y);
 		LaneSwitchValues.Add(Tile->CenterLane->GetComponentLocation().Y);
@@ -36,17 +36,25 @@ void AMindFluxGameModeBase::CreateInitialFloorTiles()
 		UE_LOG(LogTemp, Warning, TEXT("LANE VALUE: %f"), Val);
 	}
 
+	AddFloorTile(false);
+	AddFloorTile(false);
+
 	for (int i = 0; i < NumInitialFloorTiles - 1; ++i) {
-		AddFloorTile();
+		AddFloorTile(true);
 	}
 }
 
-AFloorTile* AMindFluxGameModeBase::AddFloorTile()
+AFloorTile* AMindFluxGameModeBase::AddFloorTile(const bool bSpawnItems)
 {
 	UWorld* World = GetWorld();
 	if (World) {
 		AFloorTile* Tile = World->SpawnActor<AFloorTile>(FloorTileClass, NextSpawnPoint);
 		if (Tile) {
+			if (bSpawnItems)
+			{
+				 Tile->SpawnItems();
+			}
+
 			NextSpawnPoint = Tile->GetAttachTransform();
 		}
 		return Tile;

@@ -32,6 +32,21 @@ void ARunCharacter::BeginPlay()
 	RunGameMode = Cast<AMindFluxGameModeBase>(UGameplayStatics::GetGameMode(GetWorld()));
 }
 
+void ARunCharacter::OnDeath()
+{
+	bIsDead = false;
+	if (RestartTimerHandle.IsValid()) {
+		GetWorldTimerManager().ClearTimer(RestartTimerHandle);
+	}
+
+	if(GetWorld()->IsServer()){
+
+		// Reload the current level to restart the game
+		UGameplayStatics::OpenLevel(this, FName(*GetWorld()->GetName()), true);
+	}
+
+}
+
 // Called every frame
 void ARunCharacter::Tick(float DeltaTime)
 {
@@ -89,6 +104,33 @@ void ARunCharacter::ChangeLaneUpdate(float Value) {
 
 void ARunCharacter::ChangeLaneFinished() {
 	CurrentLane = NextLane;
+}
+
+void ARunCharacter::Death()
+{
+	if (!bIsDead) {
+
+		const FVector Location = GetActorLocation();
+
+		UWorld* World = GetWorld();
+
+		if (World) {
+			bIsDead = true;
+			DisableInput(nullptr);
+
+			if (DeathParticleSystem) {
+				UGameplayStatics::SpawnEmitterAtLocation(World, DeathParticleSystem, Location);
+			}
+
+			if (DeathSound) {
+				UGameplayStatics::PlaySoundAtLocation(World, DeathSound, Location);
+			}
+
+			GetMesh()->SetVisibility(false);
+			World->GetTimerManager().SetTimer(RestartTimerHandle, this, &ARunCharacter::OnDeath, 1.f);
+		}
+	}
+
 }
 
 bool ARunCharacter::Server_OnTrigger_Validate(bool isRight)

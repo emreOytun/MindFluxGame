@@ -5,11 +5,13 @@
 #include "CoreMinimal.h"
 #include "Components/ArrowComponent.h"
 #include "GameFramework/Actor.h"
+#include "Obstacle.h"
 #include "FloorTile.generated.h"
 
 class UStaticMeshComponent;
 class UArrowComponent;
 class UBoxComponent;
+class AObstacle;
 
 UCLASS()
 class MINDFLUX_API AFloorTile : public AActor
@@ -17,6 +19,12 @@ class MINDFLUX_API AFloorTile : public AActor
 	GENERATED_BODY()
 	
 public:	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Config")
+	TSubclassOf<AObstacle> SmallObstacleClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Config")
+	TSubclassOf<AObstacle> BigObstacleClass;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	USceneComponent* SceneComponent;
 
@@ -37,6 +45,9 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UBoxComponent* FloorTriggerBox;
+
+	UFUNCTION(BlueprintCallable)
+	void SpawnItems();
 
 	int count = 0;
 
@@ -61,6 +72,9 @@ protected:
 
 	UFUNCTION()
 	void OnTriggerBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	UFUNCTION()
+	void SpawnLaneItem(UArrowComponent* Lane);
 	
 	UPROPERTY()
 	FTimerHandle DestroyHandle;
@@ -73,6 +87,6 @@ protected:
 
 public:	
 	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+	//virtual void Tick(float DeltaTime) override;
 
 };
