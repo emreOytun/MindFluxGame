@@ -1,9 +1,9 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
+#include "MindFluxGameModeBase.h"
 
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetStringLibrary.h"
-#include "MindFluxGameModeBase.h"
 #include "FloorTile.h"
 #include "RunCharacter.h"
 
