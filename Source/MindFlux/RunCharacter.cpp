@@ -83,6 +83,9 @@ void ARunCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
+	PlayerInputComponent->BindTouch(IE_Pressed, this, &ARunCharacter::TouchStarted);
+	PlayerInputComponent->BindTouch(IE_Released, this, &ARunCharacter::TouchEnded);
+
 	PlayerInputComponent->BindAction("MoveLeft", IE_Pressed, this, &ARunCharacter::MoveLeft);
 	PlayerInputComponent->BindAction("MoveRight", IE_Pressed, this, &ARunCharacter::MoveRight);
 	PlayerInputComponent->BindAction("Down", IE_Pressed, this, &ARunCharacter::MoveDown);
@@ -287,5 +290,35 @@ void ARunCharacter::Client_OnTrigger_Implementation()
 		if (DeathSound) {
 			UGameplayStatics::PlaySoundAtLocation(World, DeathSound, Location);
 		}
+	}
+}
+
+void ARunCharacter::TouchStarted(ETouchIndex::Type FingerIndex, FVector Location)
+{
+	TouchStartLocation = FVector2D(Location.X, Location.Y);
+}
+
+void ARunCharacter::TouchEnded(ETouchIndex::Type FingerIndex, FVector Location)
+{
+	TouchEndLocation = FVector2D(Location.X, Location.Y);
+
+	
+	if (TouchStartLocation.Y - TouchEndLocation.Y > 50.0f)
+	{
+		Jump();
+	}
+	else if (TouchStartLocation.X - TouchEndLocation.X > 50.0f){
+		
+		MoveLeft();
+		
+	}
+	else if (TouchEndLocation.X - TouchStartLocation.X > 50.0f) {
+
+		MoveRight();
+
+	}
+	else if (TouchEndLocation.Y - TouchStartLocation.Y > 50.0f)
+	{
+		MoveDown();
 	}
 }

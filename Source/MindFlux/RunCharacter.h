@@ -91,6 +91,14 @@ protected:
 	UPROPERTY()
 	FTimerHandle RestartTimerHandle;
 
+	// Touch input handlers
+	virtual void TouchStarted(const ETouchIndex::Type FingerIndex, const FVector Location);
+	virtual void TouchEnded(const ETouchIndex::Type FingerIndex, const FVector Location);
+
+
+	FVector2D TouchStartLocation;
+	FVector2D TouchEndLocation;
+
 	UPROPERTY()
 	bool bIsDead = false;
 public:	
