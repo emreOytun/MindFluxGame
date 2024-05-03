@@ -5,6 +5,7 @@ Plugins//Binaries/
 /Intermediate/
 /Saved/
 /Build/
+/TutorialPackaged/
 .vs/
 
 Binaries/*
@@ -13,6 +14,7 @@ Intermediate/*
 Plugins//Intermediate/
 Saved/*
 Build/*
+TutorialPackaged/*
 
 # Visual Studio solutions
 /*.sln
