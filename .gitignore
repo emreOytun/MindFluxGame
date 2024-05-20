@@ -63,4 +63,4 @@ TutorialPackaged/*
 *.VC.opendb
 
 SourceArt/**/*.png
-SourceArt/**/*.tga
+SourceArt/**/*.tga.DS_Store
