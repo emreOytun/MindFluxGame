@@ -73,7 +73,7 @@ void AFloorTile::OnTriggerBoxOverlap(UPrimitiveComponent* OverlappedComponent, A
 
 void AFloorTile::SpawnItems(FMapsDetail MapDetail)
 {
-	if (IsValid(SmallObstacleClass) && IsValid(BigObstacleClass)) {
+	if (IsValid(SmallObstacleClass) && IsValid(BigObstacleClass)&&IsValid(CointItemClass)) {
 		int res1 = SpawnLaneItem(MapDetail,CenterLane, 0);
 		int res2 = SpawnLaneItem(MapDetail,RightLane, res1);
 		SpawnLaneItem(MapDetail,LeftLane, res1 + res2);
@@ -88,19 +88,25 @@ SpawnLaneItem(FMapsDetail MapDetail,UArrowComponent* Lane, int totalBigObstacle)
 	FActorSpawnParameters SpawnParameters;
 	SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-	const FTransform& SpawnLocation = Lane->GetComponentTransform();
+	FTransform SpawnLocation = Lane->GetComponentTransform();
 
 	int res = 0;
-	if (totalBigObstacle == 2 || UKismetMathLibrary::InRange_FloatFloat(RandVal,0.5f,0.75f,true,true))
+	if (totalBigObstacle == 2 || UKismetMathLibrary::InRange_FloatFloat(RandVal,SpawnPercent1,SpawnPercent2,true,true))
 	{
 		
 		AObstacle* Obstacle = GetWorld()->SpawnActor<AObstacle>(MapDetail.SmallObstacle, SpawnLocation, SpawnParameters);
 	}
-	else if (UKismetMathLibrary::InRange_FloatFloat(RandVal, 0.75f, 1.f, true, true))
+	else if (UKismetMathLibrary::InRange_FloatFloat(RandVal, SpawnPercent2, SpawnPercent3, true, true))
 	{
 
 		AObstacle* Obstacle = GetWorld()->SpawnActor<AObstacle>(MapDetail.BigObstacle, SpawnLocation, SpawnParameters);
 		res = 1;
+	}
+	else if (UKismetMathLibrary::InRange_FloatFloat(RandVal, SpawnPercent3, 1.f, true, true))
+	{
+		SpawnLocation.SetLocation(SpawnLocation.GetLocation() + FVector(0.f, 0.f, 65.f));  // Adjust height above the floor
+		ACoinItem* Coin = GetWorld()->SpawnActor<ACoinItem>(CointItemClass, SpawnLocation, SpawnParameters);
+		
 	}
 	return res;
 }

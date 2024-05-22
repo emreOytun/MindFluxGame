@@ -95,6 +95,13 @@ void ARunCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 }
 
 
+void ARunCharacter::AddCoin() {
+	TotalCoins++;
+
+	UE_LOG(LogTemp, Warning, TEXT("Total Coins: %d"), TotalCoins);
+}
+
+
 void ARunCharacter::MoveLeft() 
 {
 	//UE_LOG(LogTemp, Warning, TEXT("MOVELEFT %d"), GetWorld()->IsServer());
@@ -371,3 +378,4 @@ void ARunCharacter::TouchEnded(ETouchIndex::Type FingerIndex, FVector Location)
 		MoveDown();
 	}
 }
+

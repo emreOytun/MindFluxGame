@@ -7,8 +7,11 @@
 #include "GameFramework/Actor.h"
 #include "Obstacle.h"
 #include "MindFluxGameModeBase.h"
+#include "CoinItem.h"
 #include "FloorTile.generated.h"
 
+
+class ACoinItem;
 class UStaticMeshComponent;
 class UArrowComponent;
 class UBoxComponent;
@@ -27,6 +30,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Config")
 	TSubclassOf<AObstacle> BigObstacleClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Config")
+	TSubclassOf<ACoinItem> CointItemClass;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	USceneComponent* SceneComponent;
@@ -48,6 +54,15 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UBoxComponent* FloorTriggerBox;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Config")
+	float SpawnPercent1 = 0.1f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Config")
+	float SpawnPercent2 = 0.3f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Config")
+	float SpawnPercent3 = 0.5f;
 
 	UFUNCTION(BlueprintCallable)
 	void SpawnItems(FMapsDetail MapDetail);
