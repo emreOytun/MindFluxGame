@@ -44,6 +44,12 @@ public:
 	void Server_OnTrigger(bool isRight);
 	bool Server_OnTrigger_Validate(bool isRight);
 	void Server_OnTrigger_Implementation(bool isRight);
+
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerRespawn();
+	void ServerRespawn_Implementation();
+	bool ServerRespawn_Validate();
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Assets")
 	class UParticleSystem* DeathParticleSystem;
@@ -59,6 +65,9 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Lane")
 	void ChangeLane();
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Widget")
+	void CreateFinishWidget(const FString& Name);
 
 	UFUNCTION(BlueprintCallable, Category = "Lane")
 	void ChangeLaneUpdate(float Value);

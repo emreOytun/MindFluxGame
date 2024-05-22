@@ -6,6 +6,7 @@
 #include "Components/ArrowComponent.h"
 #include "GameFramework/Actor.h"
 #include "Obstacle.h"
+#include "MindFluxGameModeBase.h"
 #include "FloorTile.generated.h"
 
 class UStaticMeshComponent;
@@ -49,7 +50,7 @@ public:
 	UBoxComponent* FloorTriggerBox;
 
 	UFUNCTION(BlueprintCallable)
-	void SpawnItems();
+	void SpawnItems(FMapsDetail MapDetail);
 
 	int count = 0;
 
@@ -70,7 +71,7 @@ protected:
 	void OnTriggerBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 	UFUNCTION()
-	int SpawnLaneItem(UArrowComponent* Lane, int totalBigObstacle);
+	int SpawnLaneItem(FMapsDetail MapDetail, UArrowComponent* Lane, int totalBigObstacle);
 	
 	UPROPERTY()
 	FTimerHandle DestroyHandle;

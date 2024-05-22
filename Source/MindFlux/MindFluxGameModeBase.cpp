@@ -5,12 +5,15 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetStringLibrary.h"
 #include "FloorTile.h"
+#include "FinishFlag.h"
 #include "RunCharacter.h"
 
 void AMindFluxGameModeBase::BeginPlay()
 {
 	if (GetWorld()->IsServer()) {
 		//bUseSeamlessTravel = false;
+		CurrentLevelName = GetWorld()->GetMapName();
+		CurrentLevelName.RemoveFromStart(GetWorld()->StreamingLevelsPrefix);
 		CreateInitialFloorTiles();
 		//CountCharacters = true;
 		SetCountAsGameStateToStart = true;
@@ -42,33 +45,38 @@ void AMindFluxGameModeBase::CreateInitialFloorTiles()
 {
 	int TotalTileNum = 0;
 
-	AFloorTile* Tile = AddFloorTile(false);
-	Tile->TileNum = ++TotalTileNum;
-	if (Tile) {
-		LaneSwitchValues.Add(Tile->LeftLane->GetComponentLocation().Y);
-		LaneSwitchValues.Add(Tile->CenterLane->GetComponentLocation().Y);
-		LaneSwitchValues.Add(Tile->RightLane->GetComponentLocation().Y);
-	}
 	
-	for (float Val : LaneSwitchValues) {
-		//UE_LOG(LogTemp, Warning, TEXT("LANE VALUE: %f"), Val);
+	if (auto MapDetail = MapDetails.Find(CurrentLevelName))
+	{
+		AFloorTile* Tile = nullptr;
+		for (int i = 0; i < MapDetail->MaxTileCount; ++i)
+		{
+	
+			i > NumInitialFloorTiles - 3 ? Tile = AddFloorTile(*MapDetail,true) : Tile = AddFloorTile(*MapDetail,false);
+			Tile->TileNum = ++TotalTileNum;
+		
+
+			if (Tile) {
+				LaneSwitchValues.Add(Tile->LeftLane->GetComponentLocation().Y);
+				LaneSwitchValues.Add(Tile->CenterLane->GetComponentLocation().Y);
+				LaneSwitchValues.Add(Tile->RightLane->GetComponentLocation().Y);
+			}
+		}
+		if (Tile)
+		{
+			GetWorld()->SpawnActor<AActor>(MapDetail->Flag, NextSpawnPoint);
+		}
 	}
+
+	
+	//for (float Val : LaneSwitchValues) {
+		//UE_LOG(LogTemp, Warning, TEXT("LANE VALUE: %f"), Val);
+	//}
 
 	//InitialSpawnPoint = NextSpawnPoint;
 	//UE_LOG(LogTemp, Warning, TEXT("TRANSOFRM: %d,%d,%d"), NextSpawnPoint.GetLocation.X, NextSpawnPoint.GetLocation.Y, NextSpawnPoint.GetLocation.Z);
 
 
-	Tile = AddFloorTile(false);
-	Tile->TileNum = ++TotalTileNum;
-
-	Tile = AddFloorTile(false);
-	Tile->TileNum = ++TotalTileNum;
-
-
-	for (int i = 0; i < NumInitialFloorTiles - 3; ++i) {
-		Tile = AddFloorTile(true);
-		Tile->TileNum = ++TotalTileNum;
-	}
 }
 
 /*
@@ -95,16 +103,16 @@ AFloorTile* AMindFluxGameModeBase::AddFloorTileAfterRespawn(const bool bSpawnIte
 */
 
 
-AFloorTile* AMindFluxGameModeBase::AddFloorTile(const bool bSpawnItems)
+AFloorTile* AMindFluxGameModeBase::AddFloorTile(FMapsDetail MapDetail,const bool bSpawnItems)
 {
 	UWorld* World = GetWorld();
 	if (World) {
-		AFloorTile* Tile = World->SpawnActor<AFloorTile>(FloorTileClass, NextSpawnPoint);
+		AFloorTile* Tile = World->SpawnActor<AFloorTile>(MapDetail.Tile, NextSpawnPoint);
 		if (Tile) {
 			//TilesArray.Push(Tile);
 			if (bSpawnItems)
 			{
-				 Tile->SpawnItems();
+				 Tile->SpawnItems(MapDetail);
 			}
 
 			NextSpawnPoint = Tile->GetAttachTransform();
@@ -146,4 +154,22 @@ int32 AMindFluxGameModeBase::CountPlayers() {
 		}
 	}
 	return Total;
+}
+
+void AMindFluxGameModeBase::CreateFinishWidgetForAllPlayers(FString Name)
+{
+	// Tüm PlayerController'ları dolaş
+	for (FConstPlayerControllerIterator Iterator = GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator)
+	{
+		APlayerController* PlayerController = Iterator->Get();
+		if (PlayerController)
+		{
+			ARunCharacter* PlayerCharacter = Cast<ARunCharacter>(PlayerController->GetPawn());
+			if (PlayerCharacter)
+			{
+				// PlayerCharacter üzerinde işlevi çağır
+				PlayerCharacter->CreateFinishWidget(Name);
+			}
+		}
+	}
 }

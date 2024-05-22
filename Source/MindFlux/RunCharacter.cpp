@@ -145,9 +145,9 @@ void ARunCharacter::OnDeath()
 		//RunGameMode->TotalTileNum = RunGameMode->NumInitialFloorTiles;
 
 		//RunGameMode->NextSpawnPoint = RunGameMode->InitialSpawnPoint;
-	//	RunGameMode->AddFloorTileAfterRespawn(false);
-	//	RunGameMode->AddFloorTile(false);
-	//	RunGameMode->CreateInitialFloorTiles();
+		//	RunGameMode->AddFloorTileAfterRespawn(false);
+		//	RunGameMode->AddFloorTile(false);
+		//	RunGameMode->CreateInitialFloorTiles();
 
 		//UE_LOG(LogTemp, Warning, TEXT("IS_SERVER %d, LEVEL: %s"), GetWorld()->IsServer(), *GetWorld()->GetName());
 		// Reload the current level to restart the game
@@ -162,6 +162,7 @@ void ARunCharacter::OnDeath()
 		// Iterate through player controllers
 		for (FConstPlayerControllerIterator Iterator = GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator)
 		{
+			//	APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
 			APlayerController* PlayerController = Iterator->Get();
 			if (PlayerController)
 			{
@@ -169,60 +170,60 @@ void ARunCharacter::OnDeath()
 				// Get the controlled pawn (character)
 				APawn* ControlledPawn = PlayerController->GetPawn();
 
-			//	if (ControlledPawn)
+				//if (ControlledPawn)
 				//{
-					PlayerControllerNum++;
+				PlayerControllerNum++;
 
-					// Get the initial spawn location of the character
-					//FVector InitialLocation = ControlledPawn->GetActorLocation();
-					FVector InitialLocation(50.0f + PlayerControllerNum / 100, 0.0f, 112.000687f);
+				// Get the initial spawn location of the character
+				//FVector InitialLocation = ControlledPawn->GetActorLocation();
+				FVector InitialLocation(50.0f + PlayerControllerNum / 100, 0.0f, 112.000687f);
 
-					// Destroy the current pawn
-					if (ControlledPawn) ControlledPawn->Destroy();
+				// Destroy the current pawn
+				if (ControlledPawn) ControlledPawn->Destroy();
 
-					// Check if the CharacterClass is valid
-					if (RunGameMode->CharacterClass != nullptr)
+				// Check if the CharacterClass is valid
+				if (RunGameMode->CharacterClass != nullptr)
+				{
+					// Spawn the character using the CharacterClass
+					ARunCharacter* NewCharacter = GetWorld()->SpawnActor<ARunCharacter>(RunGameMode->CharacterClass, InitialLocation, FRotator::ZeroRotator);
+					NewCharacter->TotalCharacters = 0;
+						
+					if (NewCharacter)
 					{
-						// Spawn the character using the CharacterClass
-						ARunCharacter* NewCharacter = GetWorld()->SpawnActor<ARunCharacter>(RunGameMode->CharacterClass, InitialLocation, FRotator::ZeroRotator);
-						NewCharacter->TotalCharacters = 0;
+						// Possess the new character with the player controller
+						PlayerController->Possess(NewCharacter);
+
+						/*
+						// Enable replication for the new character
+						NewCharacter->SetReplicates(true);
+						NewCharacter->SetReplicateMovement(true);
+
 						
-						if (NewCharacter)
-						{
-							// Possess the new character with the player controller
-							PlayerController->Possess(NewCharacter);
 
-							/*
-							// Enable replication for the new character
-							NewCharacter->SetReplicates(true);
-							NewCharacter->SetReplicateMovement(true);
-
-							
-
-							// Synchronize initial state to the client
-							// ...
-							*/
-						}
-						else
-						{
-							UE_LOG(LogTemp, Warning, TEXT("Failed to spawn character using CharacterClass"));
-						}
-						
+						// Synchronize initial state to the client
+						// ...
+						*/
 					}
 					else
 					{
-						UE_LOG(LogTemp, Warning, TEXT("CharacterClass is not set"));
+						UE_LOG(LogTemp, Warning, TEXT("Failed to spawn character using CharacterClass"));
 					}
+						
 				}
+				else
+				{
+					UE_LOG(LogTemp, Warning, TEXT("CharacterClass is not set"));
+				}
+			}
 			//}
-		}
-		//UE_LOG(LogTemp, Warning, TEXT("After dead count: %d"), PlayerControllerNum);
+			//}
+			//UE_LOG(LogTemp, Warning, TEXT("After dead count: %d"), PlayerControllerNum);
 
-		GetWorldTimerManager().SetTimer(RunGameMode->RespawnTimerHandle, RunGameMode, &AMindFluxGameModeBase::StartCharactersTicking, 3.f, false);
-		//RunGameMode->SetCountAsGameStateToStart = true;
+			GetWorldTimerManager().SetTimer(RunGameMode->RespawnTimerHandle, RunGameMode, &AMindFluxGameModeBase::StartCharactersTicking, 3.f, false);
+			//RunGameMode->SetCountAsGameStateToStart = true;
+		}
 	}
 }
-
 void ARunCharacter::Death()
 {
 	if (!bIsDead) {
@@ -244,12 +245,22 @@ void ARunCharacter::Death()
 			}
 
 			GetMesh()->SetVisibility(false);
-			OnDeath();
+
+			if(HasAuthority())
+			{
+				Client_OnTrigger();
+				ServerRespawn();
+			}
+			else
+			{
+				ServerRespawn();
+			}
 			//World->GetTimerManager().SetTimer(RestartTimerHandle, this, &ARunCharacter::OnDeath, 1.f);
 		}
 	}
 
 }
+	
 
 bool ARunCharacter::Server_OnTrigger_Validate(bool isRight)
 {
@@ -267,6 +278,44 @@ void ARunCharacter::Server_OnTrigger_Implementation(bool isRight)
 		NextLane = FMath::Clamp(CurrentLane - 1, 0, 2);
 		ChangeLane();
 	}
+}
+
+void ARunCharacter::ServerRespawn_Implementation()
+{
+	APlayerController* PlayerController = Cast<APlayerController>(GetController());
+	if (PlayerController)
+	{
+		APawn* ControlledPawn = PlayerController->GetPawn();
+		FVector InitialLocation(50.0f, 0.0f, 112.000687f);
+
+		if (ControlledPawn) ControlledPawn->Destroy();
+
+		if (RunGameMode->CharacterClass != nullptr)
+		{
+			ARunCharacter* NewCharacter = GetWorld()->SpawnActor<ARunCharacter>(RunGameMode->CharacterClass, InitialLocation, FRotator::ZeroRotator);
+			NewCharacter->TotalCharacters = 0;
+
+			if (NewCharacter)
+			{
+				PlayerController->Possess(NewCharacter);
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Failed to spawn character using CharacterClass"));
+			}
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("CharacterClass is not set"));
+		}
+	}
+
+	GetWorldTimerManager().SetTimer(RunGameMode->RespawnTimerHandle, RunGameMode, &AMindFluxGameModeBase::StartCharactersTicking, 3.f, false);
+}
+
+bool ARunCharacter::ServerRespawn_Validate()
+{
+	return true; 
 }
 
 bool ARunCharacter::Client_OnTrigger_Validate()
