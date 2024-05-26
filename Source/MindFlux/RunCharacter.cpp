@@ -141,7 +141,6 @@ void ARunCharacter::OnDeath()
 		GetWorldTimerManager().ClearTimer(RestartTimerHandle);
 	}
 	*/
-
 	
 	if (GetWorld()->IsServer()) {
 		Client_OnTrigger();

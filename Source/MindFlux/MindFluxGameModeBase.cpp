@@ -10,6 +10,8 @@
 
 void AMindFluxGameModeBase::BeginPlay()
 {
+	UE_LOG(LogTemp, Warning, TEXT("BEGIN PLAY GAME MODE"));
+
 	if (GetWorld()->IsServer()) {
 		//bUseSeamlessTravel = false;
 		CurrentLevelName = GetWorld()->GetMapName();
