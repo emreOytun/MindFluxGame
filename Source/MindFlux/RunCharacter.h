@@ -49,7 +49,7 @@ public:
 	void Server_OnTrigger_Implementation(bool isRight);
 
 
-	UFUNCTION(Server, Reliable, WithValidation)
+	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation)
 	void ServerRespawn();
 	void ServerRespawn_Implementation();
 	bool ServerRespawn_Validate();
