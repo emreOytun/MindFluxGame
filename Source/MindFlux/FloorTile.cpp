@@ -73,7 +73,7 @@ void AFloorTile::OnTriggerBoxOverlap(UPrimitiveComponent* OverlappedComponent, A
 
 void AFloorTile::SpawnItems(FMapsDetail MapDetail)
 {
-	if (IsValid(SmallObstacleClass) && IsValid(BigObstacleClass)&&IsValid(CointItemClass)) {
+	if (IsValid(SmallObstacleClass)&&IsValid(BigObstacleClass)&&IsValid(CointItemClass)&&IsValid(FlyItemClass)&&IsValid(IM_ItemClass)&&IsValid(HandWristItemClass) ){
 		int res1 = SpawnLaneItem(MapDetail,CenterLane, 0);
 		int res2 = SpawnLaneItem(MapDetail,RightLane, res1);
 		SpawnLaneItem(MapDetail,LeftLane, res1 + res2);
@@ -107,6 +107,24 @@ SpawnLaneItem(FMapsDetail MapDetail,UArrowComponent* Lane, int totalBigObstacle)
 		SpawnLocation.SetLocation(SpawnLocation.GetLocation() + FVector(0.f, 0.f, 65.f));  // Adjust height above the floor
 		ACoinItem* Coin = GetWorld()->SpawnActor<ACoinItem>(CointItemClass, SpawnLocation, SpawnParameters);
 		
+	}
+	else if (UKismetMathLibrary::InRange_FloatFloat(RandVal, 0.f, 0.05f, true, true))
+	{
+		SpawnLocation.SetLocation(SpawnLocation.GetLocation() + FVector(0.f, 0.f, 65.f));  // Adjust height above the floor
+		AFlyItem* Fly = GetWorld()->SpawnActor<AFlyItem>(FlyItemClass, SpawnLocation, SpawnParameters);
+
+	}
+	else if (UKismetMathLibrary::InRange_FloatFloat(RandVal, 0.05f, 0.1f, true, true))
+	{
+		SpawnLocation.SetLocation(SpawnLocation.GetLocation() + FVector(0.f, 0.f, 65.f));  // Adjust height above the floor
+		AIM_Item* ImageProcessing = GetWorld()->SpawnActor<AIM_Item>(IM_ItemClass, SpawnLocation, SpawnParameters);
+
+	}
+	else if (UKismetMathLibrary::InRange_FloatFloat(RandVal, 0.1f, 0.2f, true, true))
+	{
+		SpawnLocation.SetLocation(SpawnLocation.GetLocation() + FVector(0.f, 0.f, 65.f));  // Adjust height above the floor
+		AHandwristItem* HandWrist = GetWorld()->SpawnActor<AHandwristItem>(HandWristItemClass, SpawnLocation, SpawnParameters);
+
 	}
 	return res;
 }

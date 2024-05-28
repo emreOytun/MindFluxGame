@@ -42,11 +42,11 @@ void AFinishFlag::OnTriggerBoxOverlap(UPrimitiveComponent* OverlappedComponent, 
 {
 	if (GetWorld()->IsServer())
 	{
-		ARunCharacter* Character = Cast<ARunCharacter>(OtherActor);
-		RunGameMode->CreateFinishWidgetForAllPlayers(OtherActor->GetName());
+		//ARunCharacter* Character = Cast<ARunCharacter>(OtherActor);
+		//RunGameMode->CreateFinishWidgetForAllPlayers(OtherActor->GetName());
 	
-		//FString UrlString = TEXT("ServerLevel");
-		//GetWorld()->ServerTravel(UrlString);
+		FString UrlString = TEXT("ServerLevel");
+		GetWorld()->ServerTravel(UrlString);
 	}
 }
 

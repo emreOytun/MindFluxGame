@@ -28,7 +28,7 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Config")
 	bool CountCharacters;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	int32 TotalCoins = 0;
 
 	// Count the total number of characters
@@ -83,6 +83,15 @@ public:
 
 	UFUNCTION()
 	void AddCoin();
+
+	UFUNCTION()
+	void Fly();
+
+	UFUNCTION()
+	void GetImageProcessing();
+
+	UFUNCTION()
+	void SetHandwrist();
 
 	// Sets default values for this character's properties
 	ARunCharacter();

@@ -8,10 +8,16 @@
 #include "Obstacle.h"
 #include "MindFluxGameModeBase.h"
 #include "CoinItem.h"
+#include "FlyItem.h"
+#include "IM_Item.h"
+#include "HandwristItem.h"
 #include "FloorTile.generated.h"
 
 
 class ACoinItem;
+class AFlyItem;
+class AIM_Item;
+class AHadnwristItem;
 class UStaticMeshComponent;
 class UArrowComponent;
 class UBoxComponent;
@@ -33,6 +39,15 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Config")
 	TSubclassOf<ACoinItem> CointItemClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Config")
+	TSubclassOf<AFlyItem> FlyItemClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Config")
+	TSubclassOf<AIM_Item> IM_ItemClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Config")
+	TSubclassOf<AHandwristItem> HandWristItemClass;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	USceneComponent* SceneComponent;
@@ -56,7 +71,7 @@ public:
 	UBoxComponent* FloorTriggerBox;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Config")
-	float SpawnPercent1 = 0.1f;
+	float SpawnPercent1 = 0.2f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Config")
 	float SpawnPercent2 = 0.3f;

@@ -97,8 +97,18 @@ void ARunCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 void ARunCharacter::AddCoin() {
 	TotalCoins++;
+}
 
-	UE_LOG(LogTemp, Warning, TEXT("Total Coins: %d"), TotalCoins);
+void ARunCharacter::Fly() {
+	UE_LOG(LogTemp, Warning, TEXT("Got Fly Item"));
+}
+
+void ARunCharacter::GetImageProcessing() {
+	UE_LOG(LogTemp, Warning, TEXT("Got Image Processing Item"));
+}
+
+void ARunCharacter::SetHandwrist() {
+	UE_LOG(LogTemp, Warning, TEXT("Got Handwrist Item"));
 }
 
 
