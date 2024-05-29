@@ -98,7 +98,14 @@ void ARunCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 
 void ARunCharacter::AddCoin() {
-	TotalCoins++;
+	float ZPosition = GetActorLocation().Z;
+
+	if (ZPosition > 200.f) {
+		TotalCoins += 2; // Add two coins if the character is above 200 units in height
+	}
+	else {
+		TotalCoins++; // Otherwise, add just one coin
+	}
 }
 
 void ARunCharacter::Fly() {

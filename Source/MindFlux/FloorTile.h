@@ -31,6 +31,8 @@ class MINDFLUX_API AFloorTile : public AActor
 public:	
 	int TileNum;
 
+	bool flyingChar;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Config")
 	TSubclassOf<AObstacle> SmallObstacleClass;
 
@@ -39,6 +41,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Config")
 	TSubclassOf<ACoinItem> CointItemClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Config")
+	TSubclassOf<ACoinItem> FlyingCoinItemClass;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Config")
 	TSubclassOf<AFlyItem> FlyItemClass;

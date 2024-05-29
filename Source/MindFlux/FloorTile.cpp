@@ -106,7 +106,11 @@ SpawnLaneItem(FMapsDetail MapDetail,UArrowComponent* Lane, int totalBigObstacle)
 	{
 		SpawnLocation.SetLocation(SpawnLocation.GetLocation() + FVector(0.f, 0.f, 65.f));  // Adjust height above the floor
 		ACoinItem* Coin = GetWorld()->SpawnActor<ACoinItem>(CointItemClass, SpawnLocation, SpawnParameters);
-		
+
+
+		SpawnLocation.SetLocation(SpawnLocation.GetLocation() + FVector(0.f, 0.f, 300.f));  // Adjust height above the floor
+		ACoinItem* Coin2 = GetWorld()->SpawnActor<ACoinItem>(FlyingCoinItemClass, SpawnLocation, SpawnParameters);
+
 	}
 	else if (UKismetMathLibrary::InRange_FloatFloat(RandVal, 0.f, 0.05f, true, true))
 	{
