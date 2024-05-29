@@ -24,6 +24,19 @@ ARunCharacter::ARunCharacter()
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	Camera->bUsePawnControlRotation = false; // Camera is not controlled by controller. It is controlled from CameraArm.
 	Camera->SetupAttachment(CameraArm, USpringArmComponent::SocketName);
+
+	PortName = "/dev/ttyUSB0"; // Default port name, can be changed in editor
+    BaudRate = B9600;          // Default baud rate, can be changed in editor
+    Serial = nullptr;
+	PortBlue = "/dev/rfcomm0";
+	nanoBaudRate = B9600;
+	BraceletPort = nullptr;
+	FilePath = "/tmp/myfifo";
+	//InitializeBluetooth();
+	VisionFile = nullptr;
+	//InitializeSerialPort();
+	//InitializeVision();
+
 }
 
 // Called when the game starts or when spawned
@@ -35,7 +48,210 @@ void ARunCharacter::BeginPlay()
 	bReplicates = true;
 	CountCharacters = true;
 }
+void ARunCharacter::ReadFileData()
+{
+    if (VisionFile && VisionFile->IsOpenVision())
+    {
+        char Buffer[3];
+        ssize_t BytesRead = VisionFile->ReadVision(Buffer, sizeof(Buffer) - 1);
+        if (BytesRead > 0)
+        {
+            Buffer[BytesRead - 1] = '\0';
+            FString Data(Buffer);
+            UE_LOG(LogTemp, Log, TEXT("Received data: %s"), *Data);
+            ProcessVisionData(Data);
+        }
+    }
+}
 
+void ARunCharacter::InitializeSerialPort()
+{
+    Serial = new SerialPort(TCHAR_TO_UTF8(*PortName), BaudRate);
+
+    if (Serial->Open())
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Serial port opened successfully"));
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("Failed to open serial port"));
+    }
+
+    // Start a timer to read data periodically
+    //GetWorld()->GetTimerManager().SetTimerForNextTick([this]() { ReadSerialData(); });
+}
+
+void ARunCharacter::InitializeVision()
+{
+    VisionFile = new SerialPort(TCHAR_TO_UTF8(*FilePath));
+	UE_LOG(LogTemp, Log, TEXT("FIFO PATH %s"), *FilePath);
+    if (VisionFile->OpenVision())
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Vision file opened successfully"));
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("Failed to open vision port"));
+    }
+
+    // Start a timer to read data periodically
+    //GetWorld()->GetTimerManager().SetTimerForNextTick([this]() { ReadSerialData(); });
+}
+
+void ARunCharacter::ReadSerialData()
+{
+    if (Serial && Serial->IsOpen())
+    {
+        char Buffer[6];
+        ssize_t BytesRead = Serial->Read(Buffer, sizeof(Buffer) - 1);
+        if (BytesRead > 0)
+        {
+            Buffer[BytesRead - 1] = '\0';
+            FString Data(Buffer);
+            UE_LOG(LogTemp, Log, TEXT("Received data: %s"), *Data);
+            ProcessJoystickInput(Data);
+        }
+    }
+
+    // Schedule the next read
+    //GetWorld()->GetTimerManager().SetTimerForNextTick([this]() { ReadSerialData(); });
+}
+
+void ARunCharacter::ProcessVisionData(const FString& InputData)
+{
+	int32 command = FCString::Atoi(*InputData);
+    switch (command)
+    {
+        case 1:
+            MoveRight();
+            break;
+        case 2:
+            MoveLeft();
+            break;
+        case 3:
+            ARunCharacter::Jump();
+            break;
+        default:
+            UE_LOG(LogTemp, Warning, TEXT("Unknown command: %d"), command);
+            break;
+    }
+	UE_LOG(LogTemp, Warning, TEXT("command: %d"), command);
+}
+
+void ARunCharacter::InitializeBluetooth()
+{
+	UE_LOG(LogTemp, Error, TEXT("Initialize bluetooth icindeyim"));
+
+	BraceletPort = new SerialPort(TCHAR_TO_UTF8(*PortBlue), nanoBaudRate , 5);
+    if (!BraceletPort->OpenBluetooth())  // Assuming rfcomm0 is the Bluetooth port
+    {
+        UE_LOG(LogTemp, Error, TEXT("Failed to open Bluetooth port"));
+    }
+    else
+    {
+        UE_LOG(LogTemp, Log, TEXT("Bluetooth port opened successfully"));
+    }
+}
+
+
+void ARunCharacter::ReadBluetoothDataAsync()
+{
+        if (BraceletPort && BraceletPort->IsOpenBluetooth())
+        {
+            char Buffer[100] = {0};
+            ssize_t BytesRead = BraceletPort->ReadBluetooth(Buffer, sizeof(Buffer) - 1);
+            if (BytesRead > 0)
+            {
+                Buffer[BytesRead] = '\0';  // Ensure null-termination
+                FString Data(Buffer);
+
+                // Since we're in another thread, queue processing back on the main thread
+                    ProcessBluetoothInputAsync(Data);
+
+            }
+        }
+}
+void ARunCharacter::ProcessJoystickInput(const FString& InputData)
+{
+    TArray<FString> ParsedData;
+    InputData.ParseIntoArray(ParsedData, TEXT(","), true);
+
+    if (ParsedData.Num() == 2)
+    {
+        FString Direction = ParsedData[0];
+        int32 Jump = FCString::Atoi(*ParsedData[1]);
+
+		if (Direction == "A")
+        {
+            MoveLeft();
+        }
+        else if (Direction == "D")
+        {
+            MoveRight();
+        }
+        if (Jump == 1)
+        {
+		ACharacter::Jump();
+        }
+        UE_LOG(LogTemp, Log, TEXT("Direction = %s, Jump = %d"),*ParsedData[0],Jump);
+    }
+}
+
+void ARunCharacter::ProcessBluetoothInputAsync(const FString& InputData)
+{
+    // Asynchronously process the Bluetooth input
+        TArray<FString> Components;
+        InputData.ParseIntoArray(Components, TEXT(","), true);
+
+        int32 X = 0, Y = 0, Z = 0;
+
+        // Extract values from the parsed data
+        for (FString& Component : Components)
+        {
+            Component = Component.TrimStartAndEnd();  // Trim whitespace
+
+            if (Component.StartsWith(TEXT("X = ")))
+            {
+                FString XValue = Component.Mid(3);  // Adjust index to correctly skip 'X = '
+                X = FCString::Atoi(*XValue);
+            }
+            else if (Component.StartsWith(TEXT("Y = ")))
+            {
+                FString YValue = Component.Mid(3);  // Adjust index to correctly skip 'Y = '
+                Y = FCString::Atoi(*YValue);
+            }
+            else if (Component.StartsWith(TEXT("Z = ")))
+            {
+                FString ZValue = Component.Mid(3);  // Adjust index to correctly skip 'Z = '
+                Z = FCString::Atoi(*ZValue);
+            }
+        }
+		UE_LOG(LogTemp, Log, TEXT("X = %d, Y = %d, Z= %d"),X,Y,Z);
+        // Queue the result to be handled on the main thread
+            HandleBluetoothCommand(X, Y, Z);
+}
+
+void ARunCharacter::HandleBluetoothCommand(int32 X, int32 Y, int32 Z)
+{
+    if (X != 0)
+    {
+        // X controls horizontal movement: X > 0 -> Right, X < 0 -> Left
+        if (X >= 1)
+        {
+            MoveRight();
+        }
+        else if (X <= -1)
+        {
+            MoveLeft();
+        }
+    }
+
+    // Optionally handle Z for jumping here, ensure it's done in a way compatible with UE's threading model
+     if (Z > 5)
+    {
+        ACharacter::Jump();
+    }
+}
 void ARunCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	// Call the Super
@@ -66,7 +282,9 @@ void ARunCharacter::Tick(float DeltaTime)
 	//if (GetWorld()->IsServer()) {
 		//UE_LOG(LogTemp, Warning, TEXT("TICK CHARAC %d"), GetWorld()->IsServer());
 		Super::Tick(DeltaTime);
-
+		//ReadBluetoothDataAsync();
+		//ReadSerialData();
+		//ReadFileData();
 		if (TotalCharacters >= 1) {
 			FRotator ControlRot = GetControlRotation();
 			ControlRot.Roll = 0.f;

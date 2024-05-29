@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
-
+#include "SerialPort.h"
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Net/UnrealNetwork.h"
@@ -26,11 +26,47 @@ private:
 	class AMindFluxGameModeBase* RunGameMode;
 
 	FTimerHandle FlyTimerHandle;
+	SerialPort* Serial; // Serial port instance
+	SerialPort* BraceletPort;
+	SerialPort* VisionFile;
 
 public:
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Config")
+	FString PortName;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Config")
+	FString PortBlue;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Config")
+	int32 nanoBaudRate;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Config")
+	int32 BaudRate;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Config")
+	FString joystick;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Config")
+	FString bracelet;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Config")
+	FString FilePath;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Config")
+	FTimerHandle FileReadTimerHandle;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Config")
+	int32 LastFilePosition;
+
 	UPROPERTY(EditAnywhere, Category = "Config")
 	bool CountCharacters;
+	
+	UPROPERTY(EditAnywhere, Category = "Config")
+	bool isBracelet;
+	
+	UPROPERTY(EditAnywhere, Category = "Config")
+	bool isJoystick;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	int32 TotalCoins = 0;
@@ -145,5 +181,17 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+private:
+	void InitializeSerialPort();
+	void InitializeBluetooth();
+	void ReadSerialData();
+	void ReadBluetoothDataAsync();
+	void ReadFileData();
+	void ProcessJoystickInput(const FString& InputData);
+	void ProcessBluetoothInputAsync(const FString& InputData);
+	void ProcessVisionData(const FString& InputData);
+	void InitializeVision();
+	void HandleBluetoothCommand(int32 X, int32 Y, int32 Z);
 
 };
