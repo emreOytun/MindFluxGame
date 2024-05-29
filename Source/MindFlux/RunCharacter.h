@@ -25,6 +25,8 @@ private:
 	UPROPERTY(VisibleInstanceOnly)
 	class AMindFluxGameModeBase* RunGameMode;
 
+	FTimerHandle FlyTimerHandle;
+
 public:
 
 	UPROPERTY(EditAnywhere, Category = "Config")
@@ -53,6 +55,10 @@ public:
 	bool Server_OnTrigger_Validate(bool isRight);
 	void Server_OnTrigger_Implementation(bool isRight);
 
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerFly_OnTrigger(bool isEnd);
+	bool ServerFly_OnTrigger_Validate(bool isEnd);
+	void ServerFly_OnTrigger_Implementation(bool isEnd);
 
 	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation)
 	void ServerRespawn();
@@ -91,6 +97,9 @@ public:
 
 	UFUNCTION()
 	void Fly();
+
+	UFUNCTION()
+	void EndFly();
 
 	UFUNCTION()
 	void GetImageProcessing();

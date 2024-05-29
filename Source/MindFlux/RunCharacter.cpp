@@ -2,6 +2,7 @@
 
 #include "RunCharacter.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -101,8 +102,67 @@ void ARunCharacter::AddCoin() {
 }
 
 void ARunCharacter::Fly() {
+	
 	UE_LOG(LogTemp, Warning, TEXT("Got Fly Item"));
+	ServerFly_OnTrigger_Implementation(0);
+
 }
+
+void ARunCharacter::EndFly()
+{
+	ServerFly_OnTrigger_Implementation(1);
+}
+
+
+bool ARunCharacter::ServerFly_OnTrigger_Validate(bool isEnd)
+{
+	return true;
+}
+
+
+void ARunCharacter::ServerFly_OnTrigger_Implementation(bool isEnd) {
+
+	if (!isEnd) {
+
+		
+
+		// Disable gravity for the duration of the flight
+		if (GetCharacterMovement())
+		{
+			GetCharacterMovement()->GravityScale = 0.0f; // Disable gravity
+		}
+
+		// Define how high the character should fly and for how long.
+		float FlyHeight = 300.0f; // Height above the ground
+		float FlyDuration = 5.0f; // Duration of the flight in seconds
+
+		FVector CurrentLocation = GetActorLocation();
+		FVector FlyLocation = CurrentLocation + FVector(0.0f, 0.0f, FlyHeight);
+
+		// Set the new location with flying height.
+		SetActorLocation(FlyLocation, true);
+
+		// Set a timer to end flying after FlyDuration seconds.
+		GetWorldTimerManager().SetTimer(FlyTimerHandle, this, &ARunCharacter::EndFly, FlyDuration, false);
+	}
+	else {
+		// Restore gravity to its original setting
+		if (GetCharacterMovement())
+		{
+			GetCharacterMovement()->GravityScale = 1.0f; // Restore gravity
+		}
+
+		// Return to the original location or reduce the Z-coordinate by the fly height.
+		FVector CurrentLocation = GetActorLocation();
+		FVector GroundLocation = CurrentLocation - FVector(0.0f, 0.0f, 300.0f); // Adjust height as needed
+
+		SetActorLocation(GroundLocation, true);
+
+		// Clear the timer
+		GetWorldTimerManager().ClearTimer(FlyTimerHandle);
+	}
+}
+
 
 void ARunCharacter::GetImageProcessing() {
 	UE_LOG(LogTemp, Warning, TEXT("Got Image Processing Item"));
