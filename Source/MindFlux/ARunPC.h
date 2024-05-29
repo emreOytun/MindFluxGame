@@ -15,6 +15,10 @@ class MINDFLUX_API AARunPC : public APlayerController
 	GENERATED_BODY()
 	
 public:
+
+    UPROPERTY(BlueprintReadWrite,EditAnywhere)
+    int32 TotalHeart = 3;
+
     // RPC to notify server that the player is ready
     UFUNCTION(BlueprintCallable, Category = "UI", Server, Reliable, WithValidation)
     void ServerSetPlayerReady();

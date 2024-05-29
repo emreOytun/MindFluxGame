@@ -6,6 +6,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "MindFluxGameModeBase.h"
+#include "ARunPC.h"
 
 // Sets default values
 ARunCharacter::ARunCharacter()
@@ -262,7 +263,7 @@ void ARunCharacter::Death()
 
 			GetMesh()->SetVisibility(false);
 
-			if(HasAuthority())
+			if (HasAuthority())
 			{
 				Client_OnTrigger();
 				ServerRespawn();
@@ -272,9 +273,9 @@ void ARunCharacter::Death()
 				ServerRespawn();
 			}
 			//World->GetTimerManager().SetTimer(RestartTimerHandle, this, &ARunCharacter::OnDeath, 1.f);
+
 		}
 	}
-
 }
 	
 
@@ -304,12 +305,19 @@ void ARunCharacter::ServerRespawn_Implementation()
 		APawn* ControlledPawn = PlayerController->GetPawn();
 		FVector InitialLocation(50.0f, 0.0f, 112.000687f);
 
-		if (ControlledPawn) ControlledPawn->Destroy();
-
+		if (ControlledPawn)
+		{
+			auto PlayerToDestroy = Cast<ARunCharacter>(ControlledPawn);
+			if (PlayerToDestroy)
+			{
+				ControlledPawn->Destroy();
+			}
+		}
 		if (RunGameMode->CharacterClass != nullptr)
 		{
 			ARunCharacter* NewCharacter = GetWorld()->SpawnActor<ARunCharacter>(RunGameMode->CharacterClass, InitialLocation, FRotator::ZeroRotator);
 			NewCharacter->TotalCharacters = 0;
+			
 
 			if (NewCharacter)
 			{

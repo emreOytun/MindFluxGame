@@ -7,6 +7,8 @@
 #include "Net/UnrealNetwork.h"
 #include "RunCharacter.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHeartDelegate, int, HearthCount);
+
 UCLASS()
 class MINDFLUX_API ARunCharacter : public ACharacter
 {
@@ -30,6 +32,9 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	int32 TotalCoins = 0;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, BlueprintAssignable)
+	FHeartDelegate HeartDelegate;
 
 	// Count the total number of characters
 	UPROPERTY(Replicated)
